@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Claude Code 2차 · 내 손으로 만드는 자동화 1개</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0f172a; --ink2:#1e293b; --muted:#64748b; --line:#e2e8f0;
+    --brand:#4f46e5; --brand2:#7c3aed; --accent:#06b6d4;
+    --ok:#10b981; --warn:#f59e0b; --bad:#ef4444; --bg:#f8fafc;
+  }
+  *,*::before,*::after{box-sizing:border-box;}
+  html{zoom:1.4;}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;font-family:'Pretendard',system-ui,-apple-system,sans-serif;color:var(--ink);background:#0f172a;}
+  code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;}
+  #deck{position:fixed;inset:0;background:var(--bg);}
+  .slide{position:absolute;inset:0;padding:60px 28px 74px;display:none;align-items:center;justify-content:center;overflow-y:auto;}
+  .slide.active{display:flex;animation:fadeIn .35s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  .card{width:100%;max-width:1100px;background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 30px 80px -40px rgba(15,23,42,.35);padding:40px 48px;max-height:calc(100vh - 134px);overflow-y:auto;}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;}
+  .chip-brand{background:#eef2ff;color:var(--brand);}
+  .chip-cyan{background:#ecfeff;color:#0e7490;}
+  .chip-emerald{background:#ecfdf5;color:#047857;}
+  .chip-amber{background:#fffbeb;color:#b45309;}
+  .chip-rose{background:#fff1f2;color:#be123c;}
+  .chip-violet{background:#f5f3ff;color:#6d28d9;}
+  .chip-slate{background:#f1f5f9;color:#334155;}
+  h1.slide-title{font-size:42px;font-weight:800;letter-spacing:-0.02em;line-height:1.15;margin:0;}
+  h2.slide-h2{font-size:30px;font-weight:800;letter-spacing:-0.02em;margin:0;}
+  .lead{color:var(--muted);font-size:18px;line-height:1.6;}
+  .kbd{font-family:'JetBrains Mono',monospace;background:#0f172a;color:#e2e8f0;padding:2px 8px;border-radius:6px;font-size:13px;}
+  .pre{position:relative;background:#0f172a;color:#e2e8f0;border-radius:14px;padding:18px 22px;font-size:14px;line-height:1.7;overflow-x:auto;white-space:pre-wrap;word-break:break-word;}
+  .pre .c{color:#64748b;} .pre .k{color:#22d3ee;} .pre .s{color:#86efac;} .pre .y{color:#fde047;}
+  .copybtn{position:absolute;top:10px;right:10px;background:#1e293b;color:#cbd5e1;border:1px solid #334155;border-radius:8px;font-size:12px;padding:5px 10px;cursor:pointer;font-family:'Pretendard';font-weight:600;}
+  .copybtn.copied{background:#065f46;color:#d1fae5;}
+  .grid-cards{display:grid;gap:16px;}
+  .gc-2{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .gc-3{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .gc-4{grid-template-columns:repeat(4,minmax(0,1fr));}
+  .tile{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;}
+  .tile-soft{background:#f8fafc;border:1px solid var(--line);border-radius:16px;padding:18px;}
+  .tile-brand{background:linear-gradient(135deg,#eef2ff,#f5f3ff);border:1px solid #ddd6fe;border-radius:16px;padding:18px;}
+  .tile-cyan{background:linear-gradient(135deg,#ecfeff,#f0fdfa);border:1px solid #a5f3fc;border-radius:16px;padding:18px;}
+  .tile-emerald{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:16px;padding:18px;}
+  .tile-rose{background:#fff1f2;border:1px solid #fecdd3;border-radius:16px;padding:18px;}
+  .tile-amber{background:#fffbeb;border:1px solid #fcd34d;border-radius:16px;padding:18px;}
+  .num{display:inline-flex;width:30px;height:30px;border-radius:9px;background:#4f46e5;color:#fff;font-weight:700;align-items:center;justify-content:center;flex-shrink:0;}
+  table.t{width:100%;border-collapse:collapse;font-size:14px;}
+  table.t th{background:#f1f5f9;text-align:left;padding:9px 12px;border:1px solid var(--line);font-weight:700;color:var(--ink2);}
+  table.t td{padding:9px 12px;border:1px solid var(--line);vertical-align:top;}
+  .pillrow{display:flex;flex-wrap:wrap;gap:8px;}
+  .pill{background:#fff;border:1px solid var(--line);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;color:#334155;}
+  .ok::before{content:"✅ ";} .no::before{content:"❌ ";} .warn::before{content:"⚠️ ";} .star::before{content:"★ ";}
+  .quote{border-left:4px solid var(--brand);padding:12px 18px;background:#eef2ff;border-radius:0 12px 12px 0;color:var(--ink2);font-weight:600;font-size:18px;line-height:1.5;}
+  .small{font-size:13px;color:var(--muted);}
+  .gate{background:linear-gradient(135deg,#ecfdf5,#f0fdfa);border:2px solid #6ee7b7;border-radius:18px;padding:20px 24px;}
+  .gate .gh{font-size:20px;font-weight:800;color:#047857;}
+  /* nav */
+  .nav{position:fixed;top:0;left:0;right:0;height:48px;backdrop-filter:blur(14px);background:rgba(255,255,255,.88);border-bottom:1px solid var(--line);z-index:50;display:flex;align-items:center;gap:14px;padding:0 16px;}
+  .nav-title{font-weight:800;font-size:13px;color:var(--ink);white-space:nowrap;}
+  .nav-breadcrumb{display:flex;align-items:center;gap:8px;padding:5px 12px;background:linear-gradient(90deg,#eef2ff,#ecfeff);border:1px solid #c7d2fe;border-radius:999px;font-size:12.5px;overflow:hidden;white-space:nowrap;max-width:55vw;}
+  .nav-bc-part{font-weight:700;color:#4f46e5;flex-shrink:0;}
+  .nav-bc-sep{color:#94a3b8;}
+  .nav-bc-title{color:var(--ink2);font-weight:500;overflow:hidden;text-overflow:ellipsis;}
+  .nav-actions{margin-left:auto;display:flex;gap:6px;}
+  .nav-btn{font-size:12px;padding:6px 10px;border-radius:8px;background:#f1f5f9;color:#334155;font-weight:600;border:none;cursor:pointer;}
+  .nav-btn:hover{background:#e2e8f0;}
+  .deck-progress{position:fixed;top:48px;left:0;right:0;height:3px;background:#e2e8f0;z-index:49;}
+  .deck-progress-bar{height:100%;background:linear-gradient(90deg,var(--brand),var(--accent));width:0;transition:width .3s;}
+  .deck-ctrl{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:rgba(15,23,42,.88);backdrop-filter:blur(12px);color:#fff;padding:7px 12px;border-radius:999px;z-index:60;}
+  .deck-ctrl button{background:transparent;color:#fff;border:none;cursor:pointer;font-size:17px;width:32px;height:32px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;}
+  .deck-ctrl button:hover{background:rgba(255,255,255,.15);}
+  .deck-ctrl button:disabled{opacity:.3;cursor:not-allowed;}
+  .deck-counter{font-size:13px;font-weight:600;min-width:58px;text-align:center;}
+  .deck-arrow{position:fixed;top:50%;transform:translateY(-50%);width:44px;height:88px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.7);backdrop-filter:blur(8px);border:1px solid var(--line);cursor:pointer;z-index:55;color:var(--ink);font-size:20px;border-radius:12px;}
+  .deck-arrow:hover{background:#fff;}
+  .deck-arrow.prev{left:14px;} .deck-arrow.next{right:14px;}
+  .deck-arrow:disabled{opacity:.25;cursor:not-allowed;}
+  /* overview */
+  #overview{position:fixed;inset:0;background:rgba(15,23,42,.96);z-index:80;display:none;flex-direction:column;padding:60px 30px 30px;overflow-y:auto;}
+  #overview.active{display:flex;}
+  .ov-head{display:flex;justify-content:space-between;align-items:center;color:#fff;margin-bottom:20px;}
+  #overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+  .ov-card{background:#fff;border-radius:14px;padding:16px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;min-height:96px;transition:transform .12s;}
+  .ov-card:hover{transform:translateY(-3px);}
+  .ov-num{font-size:12px;color:var(--muted);font-weight:700;}
+  .ov-title{font-size:15px;font-weight:700;margin-top:4px;line-height:1.3;}
+  .ov-part{font-size:11px;color:var(--brand);font-weight:700;margin-top:8px;}
+  /* 발표자 노트 패널 */
+  #notes{position:fixed;left:0;right:0;bottom:0;max-height:38vh;background:rgba(15,23,42,.97);color:#e2e8f0;border-top:2px solid var(--brand);z-index:65;padding:16px 22px 56px;overflow-y:auto;display:none;font-size:14.5px;line-height:1.7;}
+  #notes.show{display:block;}
+  #notes .nt-head{font-size:12px;font-weight:700;color:#818cf8;letter-spacing:0.05em;margin-bottom:6px;text-transform:uppercase;}
+  #notes b{color:#fde047;}
+  #notes ul{margin:6px 0 0;padding-left:18px;}
+  #notes li{margin:3px 0;}
+  #notes .nt-time{display:inline-block;background:#312e81;color:#c7d2fe;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;margin-left:8px;}
+  @media print{
+    html{zoom:1;} body{overflow:visible;}
+    .nav,.deck-progress,.deck-ctrl,.deck-arrow,#overview,#notes{display:none!important;}
+    .slide{display:flex!important;position:relative;inset:auto;page-break-after:always;min-height:100vh;}
+    .card{box-shadow:none;max-height:none;}
+  }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <span class="nav-title">Claude Code 2차 · 자동화</span>
+  <span class="nav-breadcrumb">
+    <span class="nav-bc-part" id="bc-part">인트로</span>
+    <span class="nav-bc-sep">›</span>
+    <span class="nav-bc-title" id="bc-title">표지</span>
+  </span>
+  <span class="nav-actions">
+    <button class="nav-btn" id="btn-notes" title="발표자 노트 (S)">🗒 노트</button>
+    <button class="nav-btn" id="btn-overview" title="전체 보기 (O)">⊞ 전체</button>
+    <button class="nav-btn" id="btn-print" title="인쇄/PDF (P)">🖨 인쇄</button>
+    <button class="nav-btn" id="btn-fullscreen" title="전체화면 (F)">⛶ 전체화면</button>
+  </span>
+</nav>
+<div class="deck-progress"><div class="deck-progress-bar" id="progress-bar"></div></div>
+
+<div id="deck">
+
+<!-- ============ 인트로 ============ -->
+<section class="slide" id="cover" style="background:linear-gradient(135deg,#eef2ff,#f5f3ff 50%,#ecfeff);">
+  <div class="card" style="background:linear-gradient(160deg,#4f46e5,#7c3aed);color:#fff;border:none;">
+    <div style="display:flex;flex-direction:column;gap:18px;">
+      <div style="display:flex;gap:10px;">
+        <span class="chip" style="background:rgba(255,255,255,.18);color:#fff;">2차 · 중급</span>
+        <span class="chip" style="background:rgba(255,255,255,.18);color:#fff;">4~5시간 실습</span>
+      </div>
+      <h1 class="slide-title" style="color:#fff;font-size:54px;">내 손으로 만드는<br/><span style="color:#fde047;">자동화 1개</span></h1>
+      <p class="lead" style="color:#e0e7ff;font-size:21px;">시키면 한다(1차) → <b style="color:#fff;">안 시켜도 알아서 한다(2차)</b></p>
+      <div class="grid-cards gc-3" style="margin-top:10px;">
+        <div style="background:rgba(255,255,255,.12);border-radius:16px;padding:16px;"><div style="font-size:26px;">🧭</div><div style="font-weight:700;">기획</div><div class="small" style="color:#c7d2fe;">왜·누구·무엇·어떻게</div></div>
+        <div style="background:rgba(255,255,255,.12);border-radius:16px;padding:16px;"><div style="font-size:26px;">🛠️</div><div style="font-weight:700;">제작</div><div class="small" style="color:#c7d2fe;">한 줄로 실행되게</div></div>
+        <div style="background:rgba(255,255,255,.12);border-radius:16px;padding:16px;"><div style="font-size:26px;">🤖</div><div style="font-weight:700;">무인화</div><div class="small" style="color:#c7d2fe;">예약해서 알아서</div></div>
+      </div>
+      <p class="small" style="color:#c7d2fe;">강사 정유경 · 대상: 1차에서 Claude Code 설치를 마친 분</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="recap">
+  <div class="card">
+    <span class="chip chip-slate">1차에서 어디까지 왔나</span>
+    <h2 class="slide-h2" style="margin-top:10px;">우리는 "자동화 3단계"의 1단을 배웠습니다</h2>
+    <div class="grid-cards gc-3" style="margin-top:22px;">
+      <div class="tile-soft"><div style="font-weight:800;color:var(--muted);">Lv1</div><div style="font-weight:700;margin:6px 0;">매번 요청</div><div class="small">필요할 때마다 직접 타이핑해서 시킴 — <b>1차에서 한 것</b></div></div>
+      <div class="tile-brand"><div style="font-weight:800;color:var(--brand);">Lv2</div><div style="font-weight:700;margin:6px 0;">규칙 저장</div><div class="small">한 번 규칙으로 굳혀서 <b>한 줄로 실행</b> — 오늘 전원 도달</div></div>
+      <div class="tile-cyan"><div style="font-weight:800;color:#0e7490;">Lv3</div><div style="font-weight:700;margin:6px 0;">완전 자동</div><div class="small">정해진 시간에 <b>안 시켜도</b> 알아서 — 오늘 도전</div></div>
+    </div>
+    <div class="quote" style="margin-top:24px;">오늘 끝나면 여러분은 <b>Lv2 자동화 1개를 반드시</b> 갖고 나갑니다. 대부분은 Lv3까지 갑니다.</div>
+  </div>
+</section>
+
+<section class="slide" id="promise">
+  <div class="card">
+    <span class="chip chip-brand">오늘의 약속 · 타임라인</span>
+    <h2 class="slide-h2" style="margin-top:10px;">"내 반복업무 1개를 한 줄(또는 예약)로 실행되게 만든다"</h2>
+    <table class="t" style="margin-top:18px;">
+      <tr><th style="width:80px;">시간</th><th>모듈</th><th style="width:150px;">통과 기준 ★</th></tr>
+      <tr><td>0:00</td><td>0. 각성 — 내 반복이 곧 자동화 후보</td><td>—</td></tr>
+      <tr><td>0:20</td><td><b>1. 기획 먼저 — 발상 전환 + 진단 설문</b></td><td>★ 기획서 완성</td></tr>
+      <tr><td>0:55</td><td>2. 공통 레일 — 트랙별 골격 만들기</td><td>★ A 한 줄 실행</td></tr>
+      <tr><td>1:50</td><td>3. 무인화 — 예약 걸기</td><td>★ B 예약 등록</td></tr>
+      <tr><td>2:25</td><td>4. 내 것으로 — 기획서대로 갈아끼우기</td><td>★ C 본인 동작</td></tr>
+      <tr><td>3:25</td><td>5. 견고화 — 안 깨지게</td><td>—</td></tr>
+      <tr><td>4:00</td><td>6. 졸업 — 시연 & 제출</td><td>★ D 제출</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ PART 0 · 각성 ============ -->
+<section class="slide" id="part0-repeat">
+  <div class="card">
+    <span class="chip chip-violet">Part 0 · 각성</span>
+    <h2 class="slide-h2" style="margin-top:10px;">당신은 이미 "자동화 후보"를 갖고 있습니다</h2>
+    <p class="lead" style="margin-top:8px;">어떤 직장인의 7주치 AI 대화 기록 1,500여 건을 분석했더니…</p>
+    <div class="grid-cards gc-3" style="margin-top:18px;">
+      <div class="tile-brand"><div style="font-size:30px;font-weight:800;color:var(--brand);">58%</div><div class="small">요청이 <b>60자 미만</b> 짧은 단발 지시 — 결정이 빠름</div></div>
+      <div class="tile-amber"><div style="font-size:30px;font-weight:800;color:#b45309;">1위</div><div class="small">불만 표현 1위 = <b>"같은 걸 또 시킴 / 또 안 됨"</b></div></div>
+      <div class="tile-emerald"><div style="font-size:30px;font-weight:800;color:#047857;">매주</div><div class="small">똑같은 보고·정리를 <b>매번 처음부터</b> 다시 시킴</div></div>
+    </div>
+    <div class="quote" style="margin-top:22px;">매번 다시 시키는 그 일 = <b>오늘 자동화할 바로 그것.</b></div>
+  </div>
+</section>
+
+<section class="slide" id="part0-demo">
+  <div class="card">
+    <span class="chip chip-violet">Part 0 · 라이브 데모 + 미니 실습</span>
+    <h2 class="slide-h2" style="margin-top:10px;">내 기록에서 "반복"을 직접 찾아봅시다</h2>
+    <p class="lead" style="margin-top:6px;">Claude Code에 그대로 붙여넣으세요. 1차 때 이것저것 시켜본 기록이 쌓여 있습니다.</p>
+    <div class="pre" style="margin-top:14px;">내 <span class="k">~/.claude/projects</span> 폴더의 최근 대화 기록을 분석해서,
+내가 <span class="y">비슷한 요청을 반복한 작업 Top 5</span>를 찾아줘.
+각각 ⓐ무슨 일을 ⓑ몇 번쯤 시켰는지 ⓒ자동화하면 절약될 시간을 표로 정리하고,
+<span class="y">가장 자동화하기 쉬운 1개</span>를 추천해줘.</div>
+    <p class="small" style="margin-top:12px;">👉 결과가 안 나와도 괜찮아요. 다음 모듈(기획)에서 설문으로 후보를 잡습니다.</p>
+  </div>
+</section>
+
+<!-- ============ PART 1 · 기획 먼저 ============ -->
+<section class="slide" id="part1-shift">
+  <div class="card">
+    <span class="chip chip-brand">Part 1 · 기획 먼저</span>
+    <h2 class="slide-h2" style="margin-top:10px;">발상의 전환: "도구를 배운다" ❌ → "내 일을 위임한다" ✅</h2>
+    <div class="grid-cards gc-2" style="margin-top:20px;">
+      <div class="tile-rose">
+        <div style="font-weight:800;color:#be123c;margin-bottom:8px;">❌ 흔한 실수</div>
+        <div class="small" style="line-height:1.8;">"Claude로 뭐 할 수 있지?"<br/>→ 도구부터 만지다 길을 잃음<br/>→ "이거 해줘"를 매번 다시 설명<br/>→ 결과가 매번 달라서 신뢰 안 됨</div>
+      </div>
+      <div class="tile-emerald">
+        <div style="font-weight:800;color:#047857;margin-bottom:8px;">✅ 오늘의 사고법</div>
+        <div class="small" style="line-height:1.8;">"내 반복 업무 1개를 <b>신입에게 인수인계</b>한다면?"<br/>→ 왜·누구를 위해·무엇을·어떻게를 먼저 적음<br/>→ 그 인수인계서가 곧 <b>자동화 규칙</b><br/>→ 한 번 적으면 매번 똑같이 나옴</div>
+      </div>
+    </div>
+    <div class="quote" style="margin-top:20px;">자동화 = 코딩이 아니라 <b>"일을 또렷하게 설명하는 것".</b> 그래서 기획이 8할입니다.</div>
+  </div>
+</section>
+
+<section class="slide" id="part1-4q">
+  <div class="card">
+    <span class="chip chip-brand">Part 1 · 기획의 4가지 질문</span>
+    <h2 class="slide-h2" style="margin-top:10px;">만들기 전에, 이 4개부터 답하세요</h2>
+    <div class="grid-cards gc-2" style="margin-top:18px;">
+      <div class="tile"><div style="display:flex;gap:12px;align-items:center;"><span class="num" style="background:#7c3aed;">왜</span><b>WHY</b></div><div class="small" style="margin-top:8px;">무엇을 줄이려고? (시간·실수·반복·누락) — 목적이 없으면 안 만든다</div></div>
+      <div class="tile"><div style="display:flex;gap:12px;align-items:center;"><span class="num" style="background:#0e7490;">누구</span><b>WHO</b></div><div class="small" style="margin-top:8px;">결과물을 누가 보나? (나·팀·상사·고객) — 보는 사람이 형식을 정한다</div></div>
+      <div class="tile"><div style="display:flex;gap:12px;align-items:center;"><span class="num" style="background:#b45309;">무엇</span><b>WHAT</b></div><div class="small" style="margin-top:8px;">입력(재료)은 뭐고 출력(결과물)은 무슨 모습? — 여기서 트랙이 갈린다</div></div>
+      <div class="tile"><div style="display:flex;gap:12px;align-items:center;"><span class="num" style="background:#047857;">어떻게</span><b>HOW</b></div><div class="small" style="margin-top:8px;">얼마나 자주, 어디까지? (매주/매일 · 한 줄/예약)</div></div>
+    </div>
+    <p class="small" style="margin-top:18px;">😵 "근데 난 뭘 고려해야 할지도 모르겠는데요?" → 걱정 마세요. <b>다음 설문이 대신 물어봅니다.</b></p>
+  </div>
+</section>
+
+<section class="slide" id="part1-survey">
+  <div class="card" style="background:linear-gradient(160deg,#eef2ff,#ecfeff);">
+    <span class="chip chip-brand">Part 1 · 진단 설문 (실습)</span>
+    <h2 class="slide-h2" style="margin-top:10px;">🧭 클릭 6번이면 내 자동화 방향이 정해집니다</h2>
+    <p class="lead" style="margin-top:8px;">아래 주소를 열고 6개 질문에 답하세요. 끝나면 <b>추천 트랙 + 기획서 초안</b>이 자동으로 나옵니다.</p>
+    <div class="pre" style="margin-top:14px;font-size:18px;text-align:center;"><span class="y">survey.html</span>  (교육 포털 → 2차 → 진단 설문)</div>
+    <div class="grid-cards gc-2" style="margin-top:18px;">
+      <div class="tile-cyan"><b>📈 트랙 B · 대시보드</b><div class="small" style="margin-top:6px;">엑셀·숫자를 한눈에 보는 현황판으로</div></div>
+      <div class="tile-brand"><b>✅ 트랙 A · Notion</b><div class="small" style="margin-top:6px;">정리한 걸 보고서·할 일로 사람에게 전달</div></div>
+    </div>
+    <div class="gate" style="margin-top:18px;"><span class="gh star">기획서 완성</span> — 결과 화면을 캡처/복사하면 통과. 같은 트랙끼리 모여 앉으세요.</div>
+  </div>
+</section>
+
+<section class="slide" id="part1-canvas">
+  <div class="card">
+    <span class="chip chip-emerald">Part 1 · 결과물</span>
+    <h2 class="slide-h2" style="margin-top:10px;">설문이 채워준 "자동화 기획서" 예시</h2>
+    <table class="t" style="margin-top:16px;">
+      <tr><th style="width:90px;">WHY</th><td>매주 주간보고 작성에 드는 시간 절약</td></tr>
+      <tr><th>WHO</th><td>팀장님 (보고용)</td></tr>
+      <tr><th>입력</th><td>이번 주 업무 메모 (텍스트)</td></tr>
+      <tr><th>출력</th><td>Notion '주간보고' 페이지</td></tr>
+      <tr><th>트리거</th><td>매주 월요일 아침</td></tr>
+      <tr><th>수준</th><td>Lv3 (예약 무인 도전)</td></tr>
+    </table>
+    <div class="quote" style="margin-top:18px;">한 줄 정의: <b>"매주 업무 메모를 정리해서 Notion에 보고하는 자동화"</b> → 이제 이걸 만들러 갑니다.</div>
+  </div>
+</section>
+
+<!-- ============ PART 2 · 공통 레일 ============ -->
+<section class="slide" id="part2-skeleton">
+  <div class="card">
+    <span class="chip chip-cyan">Part 2 · 공통 레일</span>
+    <h2 class="slide-h2" style="margin-top:10px;">모든 자동화는 똑같은 골격을 씁니다</h2>
+    <div class="grid-cards gc-3" style="margin-top:22px;">
+      <div class="tile-brand"><span class="num">1</span><div style="font-weight:700;margin:10px 0 4px;">규칙을 적는다</div><div class="small"><span class="kbd">CLAUDE.md</span>에 "무엇을 어떻게" 한 번 박아둔다</div></div>
+      <div class="tile-cyan"><span class="num" style="background:#0e7490;">2</span><div style="font-weight:700;margin:10px 0 4px;">한 줄로 실행</div><div class="small"><span class="kbd">claude "~ 만들어줘"</span> → 규칙대로 결과가 똑같이 나온다</div></div>
+      <div class="tile-emerald"><span class="num" style="background:#047857;">3</span><div style="font-weight:700;margin:10px 0 4px;">예약한다</div><div class="small"><span class="kbd">/schedule</span> 로 정해진 시간에 알아서 (Part 3)</div></div>
+    </div>
+    <p class="lead" style="margin-top:20px;">트랙(Notion/대시보드)이 달라도 <b>골격은 같습니다.</b> 채우는 내용만 달라요.</p>
+  </div>
+</section>
+
+<section class="slide" id="part2-seats">
+  <div class="card">
+    <span class="chip chip-amber">Part 2 · 자리 이동</span>
+    <h2 class="slide-h2" style="margin-top:10px;">잠깐! 같은 트랙끼리 모여 앉을게요 🪑</h2>
+    <p class="lead" style="margin-top:8px;">설문에서 나온 트랙대로 자리를 옮겨주세요. 옆 사람과 화면이 비슷해야 <b>서로 도와주기 쉽습니다.</b></p>
+    <div class="grid-cards gc-2" style="margin-top:20px;">
+      <div class="tile-brand" style="text-align:center;padding:28px;">
+        <div style="font-size:34px;">🅰️</div>
+        <div style="font-weight:800;font-size:20px;margin:8px 0;">트랙 A · Notion</div>
+        <div class="small">→ <b>강의실 왼쪽</b>으로 이동</div>
+      </div>
+      <div class="tile-cyan" style="text-align:center;padding:28px;">
+        <div style="font-size:34px;">🅱️</div>
+        <div style="font-weight:800;font-size:20px;margin:8px 0;">트랙 B · 대시보드</div>
+        <div class="small">→ <b>강의실 오른쪽</b>으로 이동</div>
+      </div>
+    </div>
+    <p class="small" style="margin-top:18px;">트랙이 헷갈리면 설문을 다시 보세요. 둘 다 흥미로우면 <b>A부터</b> 시작해도 됩니다. (두 트랙은 동시에 진행해요)</p>
+  </div>
+</section>
+
+<section class="slide" id="part2-build">
+  <div class="card">
+    <span class="chip chip-cyan">Part 2 · 공통 레일 (A·B 동시 진행)</span>
+    <h2 class="slide-h2" style="margin-top:10px;">규칙 적고(①) → 한 줄로 실행(②)</h2>
+    <p class="small" style="margin-top:4px;">자기 트랙 열만 따라가세요. 폴더에 <span class="kbd">CLAUDE.md</span>를 만들어 붙여넣고, 그다음 한 줄 실행.</p>
+    <div class="grid-cards gc-2" style="margin-top:14px;">
+      <!-- 트랙 A -->
+      <div class="tile-brand">
+        <b>🅰️ 트랙 A · Notion (주간보고)</b>
+        <div class="small" style="margin:8px 0 4px;font-weight:700;color:var(--brand);">① CLAUDE.md</div>
+        <div class="pre" style="font-size:12px;line-height:1.6;"><span class="c"># 주간보고 자동화 규칙</span>
+<span class="k">## WHAT</span>: 이번 주 업무 주간보고 만들기
+<span class="k">## 입력</span>: ./이번주_메모.md
+<span class="k">## 양식</span>: 1)한 일 2)계획 3)이슈, 각 3줄
+<span class="k">## 끝나면</span>: Notion '주간보고'에 등록</div>
+        <div class="small" style="margin:10px 0 4px;font-weight:700;color:var(--brand);">② 한 줄 실행</div>
+        <div class="pre" style="font-size:12.5px;">claude <span class="s">"이번 주 주간보고 만들어서 Notion에 올려줘"</span></div>
+        <div class="small" style="margin-top:8px;">→ 메모 정리 후 Notion에 태스크 자동 등록</div>
+      </div>
+      <!-- 트랙 B -->
+      <div class="tile-cyan">
+        <b>🅱️ 트랙 B · 대시보드 (데이터)</b>
+        <div class="small" style="margin:8px 0 4px;font-weight:700;color:#0e7490;">① CLAUDE.md</div>
+        <div class="pre" style="font-size:12px;line-height:1.6;"><span class="c"># 대시보드 자동화 규칙</span>
+<span class="k">## WHAT</span>: 데이터를 한눈에 보는 대시보드
+<span class="k">## 입력</span>: ./데이터.xlsx
+<span class="k">## 출력</span>: dashboard.html (지표+표+차트)
+<span class="k">## 규칙</span>: 숫자 천단위 콤마, 최신 기준</div>
+        <div class="small" style="margin:10px 0 4px;font-weight:700;color:#0e7490;">② 한 줄 실행</div>
+        <div class="pre" style="font-size:12.5px;">claude <span class="s">"데이터.xlsx로 대시보드 만들어줘"</span></div>
+        <div class="small" style="margin-top:8px;">→ dashboard.html 생성, 브라우저로 열기</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="part2-gateA">
+  <div class="card">
+    <span class="chip chip-emerald">Part 2 · 체크포인트</span>
+    <div class="gate" style="margin-top:14px;">
+      <div class="gh star" style="font-size:24px;">게이트 A — 전원 통과</div>
+      <p class="lead" style="margin:12px 0 0;color:#065f46;">트랙 A든 B든, <b>"한 줄 실행"으로 결과물이 한 번 나왔다.</b></p>
+    </div>
+    <p class="lead" style="margin-top:18px;">이 순간 여러분은 <b>이미 자동화 1개(Lv2)를 완성</b>했습니다. 안 된 분은 손 들어주세요 — 조교가 갑니다. 🙋</p>
+    <p class="small" style="margin-top:8px;">버디(옆자리)끼리 먼저 비교해보세요. 같은 트랙이면 화면이 비슷하게 나옵니다.</p>
+  </div>
+</section>
+
+<section class="slide" id="break1" style="background:linear-gradient(135deg,#0f172a,#1e293b);">
+  <div class="card" style="background:transparent;border:none;box-shadow:none;text-align:center;color:#fff;">
+    <div style="font-size:60px;">☕</div>
+    <h1 class="slide-title" style="color:#fff;">쉬는 시간 · 10분</h1>
+    <p class="lead" style="color:#94a3b8;">돌아오면 "안 시켜도 알아서" 무인화를 켭니다.</p>
+  </div>
+</section>
+
+<!-- ============ PART 3 · 무인화 ============ -->
+<section class="slide" id="part3-lv3">
+  <div class="card">
+    <span class="chip chip-cyan">Part 3 · 무인화</span>
+    <h2 class="slide-h2" style="margin-top:10px;">Lv3 = "내가 부르지 않아도" 알아서 실행</h2>
+    <div class="grid-cards gc-2" style="margin-top:20px;">
+      <div class="tile-soft"><b>Lv2 (지금)</b><div class="small" style="margin-top:6px;">매주 월요일, 내가 <span class="kbd">claude "..."</span>를 친다</div></div>
+      <div class="tile-emerald"><b>Lv3 (목표)</b><div class="small" style="margin-top:6px;">매주 월요일 8시, <b>안 쳐도</b> 보고서가 Notion에 올라가 있다</div></div>
+    </div>
+    <div class="quote" style="margin-top:22px;">차이는 딱 하나 — <b>"언제 실행할지"를 미리 예약</b>해두는 것.</div>
+  </div>
+</section>
+
+<section class="slide" id="part3-schedule">
+  <div class="card">
+    <span class="chip chip-cyan">Part 3 · 예약 걸기</span>
+    <h2 class="slide-h2" style="margin-top:10px;">🤖 <span class="kbd" style="font-size:22px;">/schedule</span> — 노트북을 꺼도 동작</h2>
+    <p class="lead" style="margin-top:8px;">Claude Code의 예약 기능은 <b>원격(서버)에서 실행</b>됩니다. 내 노트북이 꺼져 있어도 돌아가요.</p>
+    <div class="pre" style="margin-top:14px;">Claude Code 입력창에 그대로 입력:
+
+<span class="k">/schedule</span> 매주 월요일 오전 8시에 <span class="s">"이번 주 주간보고 만들어서 Notion에 올려줘"</span> 실행해줘</div>
+    <div class="grid-cards gc-3" style="margin-top:16px;">
+      <div class="tile-soft small"><b>매일</b><br/>아침 브리핑</div>
+      <div class="tile-soft small"><b>매주</b><br/>주간보고·현황판</div>
+      <div class="tile-soft small"><b>매월</b><br/>월말 정산 요약</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="part3-gateB">
+  <div class="card">
+    <span class="chip chip-emerald">Part 3 · 체크포인트</span>
+    <div class="gate" style="margin-top:14px;">
+      <div class="gh star" style="font-size:24px;">게이트 B — 예약 등록 확인</div>
+      <p class="lead" style="margin:12px 0 0;color:#065f46;"><span class="kbd">/schedule</span> 목록에 내 자동화가 떠 있으면 통과. (Lv3 도달! 🎉)</p>
+    </div>
+    <div class="tile-amber" style="margin-top:18px;">
+      <b class="warn">솔직하게 말씀드리면</b>
+      <div class="small" style="margin-top:6px;line-height:1.8;">예약 기능은 계정·보안 정책에 따라 막혀 있을 수 있어요. <b>안 돼도 괜찮습니다</b> — 게이트 A(한 줄 실행)를 통과한 시점에 이미 졸업 조건을 채웠습니다. 예약은 "보너스"예요.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 4 · 내 것으로 ============ -->
+<section class="slide" id="part4-swap">
+  <div class="card">
+    <span class="chip chip-brand">Part 4 · 내 것으로</span>
+    <h2 class="slide-h2" style="margin-top:10px;">기획서대로 "내 업무"를 갈아끼웁니다</h2>
+    <p class="lead" style="margin-top:8px;">방금 만든 골격(CLAUDE.md)에서 <b>입력·양식·출력만 내 기획서 값으로</b> 바꾸면 끝.</p>
+    <table class="t" style="margin-top:16px;">
+      <tr><th style="width:120px;">바꿀 칸</th><th>공통 예제</th><th>→ 내 것 (설문 기획서)</th></tr>
+      <tr><td>입력</td><td>이번주_메모.md</td><td>→ 내 실제 자료 파일</td></tr>
+      <tr><td>양식/출력</td><td>주간보고 3블록</td><td>→ 내가 원하는 결과 형태</td></tr>
+      <tr><td>끝나면</td><td>Notion 등록</td><td>→ 내 목적지 (Notion/대시보드/메일)</td></tr>
+    </table>
+    <p class="small" style="margin-top:14px;">조교가 자리를 돌며 막힌 분을 도와드립니다. <b>옆자리에 먼저 물어보기!</b></p>
+  </div>
+</section>
+
+<section class="slide" id="part4-kit">
+  <div class="card">
+    <span class="chip chip-amber">Part 4 · 막혔다면</span>
+    <h2 class="slide-h2" style="margin-top:10px;">본인 업무가 안 떠오르면 → 기본 키트로</h2>
+    <div class="grid-cards gc-2" style="margin-top:18px;">
+      <div class="tile-brand">
+        <b>기본 키트 ① · 파일 자동 요약</b>
+        <div class="pre small" style="margin-top:10px;">claude <span class="s">"이 폴더에 새로 들어온 파일들 핵심만 표로 요약해줘"</span></div>
+      </div>
+      <div class="tile-cyan">
+        <b>기본 키트 ② · Notion 내 할 일 정리</b>
+        <div class="pre small" style="margin-top:10px;">claude <span class="s">"Notion에서 내 이번 주 할 일 모아서 우선순위로 정리해줘"</span></div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:18px;">둘 중 하나만 동작시켜도 <b>게이트 C 통과.</b> 완벽보다 "일단 1개 돌아가게".</p>
+  </div>
+</section>
+
+<section class="slide" id="part4-gateC">
+  <div class="card">
+    <span class="chip chip-emerald">Part 4 · 체크포인트</span>
+    <div class="gate" style="margin-top:14px;">
+      <div class="gh star" style="font-size:24px;">게이트 C — 내 자동화가 한 번 돌았다</div>
+      <p class="lead" style="margin:12px 0 0;color:#065f46;">내 데이터/내 목적지로 결과물이 한 번 나오면 통과. <b>이게 오늘의 졸업 작품.</b></p>
+    </div>
+    <p class="small" style="margin-top:16px;">빨리 끝난 분 → 두 번째 자동화에 도전하거나 옆자리 멘토가 되어주세요. 🙌</p>
+  </div>
+</section>
+
+<section class="slide" id="break2" style="background:linear-gradient(135deg,#0f172a,#1e293b);">
+  <div class="card" style="background:transparent;border:none;box-shadow:none;text-align:center;color:#fff;">
+    <div style="font-size:60px;">☕</div>
+    <h1 class="slide-title" style="color:#fff;">쉬는 시간 · 10분</h1>
+    <p class="lead" style="color:#94a3b8;">마지막으로, "안 깨지게" 만드는 법.</p>
+  </div>
+</section>
+
+<!-- ============ PART 5 · 견고화 ============ -->
+<section class="slide" id="part5-3rules">
+  <div class="card">
+    <span class="chip chip-rose">Part 5 · 견고화</span>
+    <h2 class="slide-h2" style="margin-top:10px;">"왜 안 돼!"를 줄이는 3원칙</h2>
+    <p class="small" style="margin-top:4px;">(실제 사용자 1,500건 분석에서 좌절의 80%는 이 3가지에서 나왔습니다)</p>
+    <div class="grid-cards gc-3" style="margin-top:18px;">
+      <div class="tile-rose"><b>1. "이거" 금지</b><div class="small" style="margin-top:6px;">"이거 또 8 떠" ❌<br/>→ "footer 파일에서 경고 8개" ✅<br/>대상을 1개 명시</div></div>
+      <div class="tile-amber"><b>2. 한 번에 한 의도</b><div class="small" style="margin-top:6px;">지시+질문+변심 섞지 않기. 생각 바뀌면 끊어서 따로.</div></div>
+      <div class="tile-emerald"><b>3. 항상 검증</b><div class="small" style="margin-top:6px;">자동화일수록 "맞게 됐나" 확인 한 줄을 규칙에 넣기.</div></div>
+    </div>
+    <div class="quote" style="margin-top:20px;">자동화가 안 풀리는 대부분은 코드가 아니라 <b>지시가 모호해서</b>입니다.</div>
+  </div>
+</section>
+
+<section class="slide" id="part5-verify">
+  <div class="card">
+    <span class="chip chip-rose">Part 5 · 안전·검증</span>
+    <h2 class="slide-h2" style="margin-top:10px;">자동으로 돌수록 — 안전장치를 박아둡니다</h2>
+    <div class="grid-cards gc-2" style="margin-top:18px;">
+      <div class="tile-soft"><b>🔒 민감정보</b><div class="small" style="margin-top:6px;line-height:1.8;">고객·개인정보·비번은 자동화 입력에서 빼거나 가명 처리. 데이터 반출 규정 준수.</div></div>
+      <div class="tile-soft"><b>✅ 결과 검증 규칙</b><div class="small" style="margin-top:6px;line-height:1.8;">CLAUDE.md에 한 줄: <span class="kbd">"끝나면 결과 요약 3줄로 보여주고 이상하면 멈춰"</span></div></div>
+    </div>
+    <div class="tile-amber" style="margin-top:16px;"><b class="warn">예약 자동화의 함정</b><div class="small" style="margin-top:6px;">무인이면 틀려도 아무도 모름 → 첫 2~3회는 결과를 꼭 눈으로 확인하고 안정되면 믿기.</div></div>
+  </div>
+</section>
+
+<section class="slide" id="part5-selfcheck">
+  <div class="card">
+    <span class="chip chip-rose">Part 5 · 깨졌을 때</span>
+    <h2 class="slide-h2" style="margin-top:10px;">자동화가 멈췄다? 자가진단 3줄</h2>
+    <div style="margin-top:18px;display:flex;flex-direction:column;gap:12px;">
+      <div class="tile" style="display:flex;gap:14px;align-items:center;"><span class="num">1</span><div><b>입력이 그대로 있나?</b><div class="small">파일 이름·위치가 바뀌면 못 찾습니다.</div></div></div>
+      <div class="tile" style="display:flex;gap:14px;align-items:center;"><span class="num" style="background:#0e7490;">2</span><div><b>연결이 살아있나?</b><div class="small">Notion 토큰 만료, 로그인 풀림 → 다시 연결.</div></div></div>
+      <div class="tile" style="display:flex;gap:14px;align-items:center;"><span class="num" style="background:#047857;">3</span><div><b>그냥 물어보기</b><div class="small"><span class="kbd">claude "이 자동화 왜 안 됐는지 봐줘"</span> — 에러 메시지가 힌트.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 6 · 졸업 ============ -->
+<section class="slide" id="part6-demo">
+  <div class="card">
+    <span class="chip chip-violet">Part 6 · 졸업</span>
+    <h2 class="slide-h2" style="margin-top:10px;">🎓 시연하고, 제출하고, 졸업합니다</h2>
+    <div class="grid-cards gc-2" style="margin-top:18px;">
+      <div class="tile-brand"><b>① 미니 시연 (4~5명)</b><div class="small" style="margin-top:6px;">"제 자동화는 ___를 ___로 만들어요. 한 줄이면 끝!" 30초씩.</div></div>
+      <div class="tile-emerald"><b>② 제출 (전원)</b><div class="small" style="margin-top:6px;">Notion로 "내 자동화 1개 + 기획서 캡처" 제출.</div></div>
+    </div>
+    <div class="gate" style="margin-top:18px;"><span class="gh star">게이트 D — 제출 완료 = 2차 수료</span></div>
+  </div>
+</section>
+
+<section class="slide" id="part6-next3">
+  <div class="card">
+    <span class="chip chip-slate">다음 단계</span>
+    <h2 class="slide-h2" style="margin-top:10px;">3차(심화)에서는 — "엮고 운영"합니다</h2>
+    <div class="grid-cards gc-2" style="margin-top:18px;">
+      <div class="tile-soft"><b>🔗 여러 자동화 연결</b><div class="small" style="margin-top:6px;">데이터 수집 → 분석 → 보고 → 알림을 한 흐름으로</div></div>
+      <div class="tile-soft"><b>📦 팀에 배포</b><div class="small" style="margin-top:6px;">내 자동화를 Skill로 패키징해 팀원도 한 줄로 쓰게</div></div>
+      <div class="tile-soft"><b>🚨 실패 알림</b><div class="small" style="margin-top:6px;">자동화가 멈추면 나에게 메신저로 알려주게</div></div>
+      <div class="tile-soft"><b>🧩 여러 도구 연동</b><div class="small" style="margin-top:6px;">Notion·메일·캘린더·업무 시스템을 한 번에</div></div>
+    </div>
+    <p class="lead" style="margin-top:18px;">오늘 만든 자동화가 <b>3차의 출발점</b>이 됩니다. 잘 보관해두세요.</p>
+  </div>
+</section>
+
+<section class="slide" id="part6-thanks" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);">
+  <div class="card" style="background:transparent;border:none;box-shadow:none;text-align:center;color:#fff;">
+    <h1 class="slide-title" style="color:#fff;">수고하셨습니다 🎉</h1>
+    <p class="lead" style="color:#e0e7ff;font-size:22px;margin-top:12px;">오늘 여러분은 "시키는 사람"에서<br/><b style="color:#fde047;">"자동화를 만드는 사람"</b>이 되었습니다.</p>
+    <p class="lead" style="color:#c7d2fe;margin-top:18px;">매주 돌아갈 자동화 1개 — 그게 시작입니다.</p>
+  </div>
+</section>
+
+</div>
+
+<!-- 컨트롤 -->
+<button class="deck-arrow prev" id="arrow-prev" title="이전">‹</button>
+<button class="deck-arrow next" id="arrow-next" title="다음">›</button>
+<div class="deck-ctrl">
+  <button id="first-slide" title="처음 (Home)">⏮</button>
+  <button id="prev-slide" title="이전 (←)">◀</button>
+  <span class="deck-counter" id="counter">1 / 1</span>
+  <button id="next-slide" title="다음 (→)">▶</button>
+  <button id="last-slide" title="마지막 (End)">⏭</button>
+</div>
+
+<!-- 전체 보기 -->
+<div id="overview">
+  <div class="ov-head">
+    <h2 style="margin:0;font-size:22px;">전체 슬라이드</h2>
+    <button class="nav-btn" id="overview-close">✕ 닫기 (Esc)</button>
+  </div>
+  <div id="overview-grid"></div>
+</div>
+
+<!-- 발표자 노트 패널 (S 토글) -->
+<div id="notes"><div class="nt-head">🗒 발표자 노트</div><div id="notes-body"></div></div>
+
+<script>
+(function(){
+  const deck = document.getElementById('deck');
+  const slides = Array.from(deck.querySelectorAll('.slide'));
+  const total = slides.length;
+  const counter = document.getElementById('counter');
+  const progressBar = document.getElementById('progress-bar');
+  const arrowPrev = document.getElementById('arrow-prev');
+  const arrowNext = document.getElementById('arrow-next');
+  const btnPrev = document.getElementById('prev-slide');
+  const btnNext = document.getElementById('next-slide');
+  const btnFirst = document.getElementById('first-slide');
+  const btnLast = document.getElementById('last-slide');
+  const overview = document.getElementById('overview');
+  const overviewGrid = document.getElementById('overview-grid');
+  const overviewClose = document.getElementById('overview-close');
+  const btnOverview = document.getElementById('btn-overview');
+  const btnPrint = document.getElementById('btn-print');
+  const btnFullscreen = document.getElementById('btn-fullscreen');
+  const bcPart = document.getElementById('bc-part');
+  const bcTitle = document.getElementById('bc-title');
+  const notesPanel = document.getElementById('notes');
+  const notesBody = document.getElementById('notes-body');
+  const btnNotes = document.getElementById('btn-notes');
+
+  // ===== 발표자 노트 (슬라이드 id → 말할 내용) =====
+  const NOTES = {
+    'cover':'<span class="nt-time">~1분</span><b>분위기 잡기.</b> "1차에서 설치하고 이것저것 시켜보셨죠? 오늘은 딱 하나 — <b>여러분 손으로 돌아가는 자동화 1개</b>를 만들어 갑니다." 부담 낮추기: "코딩 아니고, 일을 또렷하게 설명하는 거예요."',
+    'recap':'<span class="nt-time">~2분</span>자동화 3단계 복습. "1차는 Lv1(매번 요청)이었어요. 오늘은 <b>Lv2(한 줄 실행)를 전원 보장</b>, Lv3(예약)는 도전." 마지막 인용구를 또박또박 읽어주기 — 오늘의 약속.',
+    'promise':'<span class="nt-time">~2분</span>타임라인 빠르게 훑기. <b>★표시가 "통과 지점"</b>임을 강조. "각 ★에서 손 들어 확인하니까, 막히면 바로 손 드세요. 조교가 갑니다."',
+    'part0-repeat':'<span class="nt-time">~3분</span><b>핵심 훅.</b> "어떤 직장인 7주 기록을 분석했더니" — 58%, 좌절 1위 순서로. 청중에게 질문: "여러분도 매주 똑같은 보고 다시 만들죠?" 끄덕이게 만들기. 인용구로 마무리: <b>"또 시키는 그 일 = 오늘 자동화할 그것."</b>',
+    'part0-demo':'<span class="nt-time">~5분 (실습)</span>강사가 먼저 본인 화면으로 시연 → 그다음 다 같이. "결과 안 나와도 OK, 다음 설문이 잡아줘요"로 안심. 복사 버튼 알려주기. <b>완벽 결과 기다리지 말고 2~3분 후 다음으로.</b>',
+    'part1-shift':'<span class="nt-time">~3분</span>오늘 가장 중요한 슬라이드. 왼쪽(실수)→오른쪽(사고법) 대비. <b>"신입에게 인수인계한다면?"</b> 비유를 꼭 말로. "그 인수인계서가 곧 자동화 규칙이에요." 기획이 8할.',
+    'part1-4q':'<span class="nt-time">~3분</span>4질문을 손가락으로 하나씩. WHAT에서 "여기서 트랙이 갈린다" 예고. 마지막 줄("뭘 고려할지 모르겠다") 공감 → "그래서 설문이 있어요"로 자연스럽게 넘기기.',
+    'part1-survey':'<span class="nt-time">~10분 (실습/게이트)</span>설문 주소 띄우고 다 같이 풀기. "6번 클릭이면 끝." 다 풀면 <b>같은 트랙끼리 자리 이동</b>시키기(A는 왼쪽/B는 오른쪽 등). 캡처 확인 = 게이트 통과. 조교가 결과 화면 확인 순회.',
+    'part1-canvas':'<span class="nt-time">~2분</span>설문 결과 예시 보여주며 "이렇게 채워졌죠? 이게 여러분 설계도." 한 줄 정의를 소리 내어 읽기. "이제 이걸 진짜로 만들러 갑니다."',
+    'part2-skeleton':'<span class="nt-time">~3분</span>1·2·3 골격. <b>"트랙 달라도 골격은 똑같다"</b> 강조 — 그래야 트랙 나뉘어도 안 불안. 1차에서 CLAUDE.md 개념 배운 것 상기.',
+    'part2-seats':'<span class="nt-time">~2분</span><b>자리 이동.</b> "트랙 A는 왼쪽, B는 오른쪽으로 옮겨주세요." 실제 강의실 구역명으로 바꿔 말하기. 같은 트랙끼리 모여야 버디·조교 지원이 빨라짐. 헷갈리는 사람은 A부터.',
+    'part2-build':'<span class="nt-time">~18분 (실습/게이트 A 포함)</span><b>A·B 동시 진행.</b> 화면 왼쪽=A, 오른쪽=B. "자기 열만 보세요." ① CLAUDE.md 만들어 붙여넣기(폴더 열기→새 파일) → ② 한 줄 실행. 복사 버튼 안내. 조교는 A/B 구역 나눠서 순회. 결과 한 번 나오면 바로 게이트 A로.',
+    'part2-gateA':'<span class="nt-time">~2분 (게이트 A)</span><b>전원 손들기.</b> "한 줄로 결과 한 번 나온 분?" 안 든 사람 좌석 조교 즉시 투입. <b>"이 순간 이미 자동화 1개 완성"</b> — 성취감 크게 띄우기. 버디 비교 유도.',
+    'break1':'<span class="nt-time">10분</span>휴식. 늦게 끝난 사람은 이 시간에 조교가 게이트 A까지 마무리 도와주기.',
+    'part3-lv3':'<span class="nt-time">~2분</span>Lv2 vs Lv3 대비. "차이는 딱 하나 — 언제 실행할지 예약." 무인화의 매력 어필("월요일 출근하면 보고서가 이미 올라가 있다").',
+    'part3-schedule':'<span class="nt-time">~10분 (실습)</span><b>핵심 셀링: "노트북 꺼도 동작"(원격 실행).</b> /schedule 자연어로 입력 시연. 자기 트랙 명령으로 바꿔서 등록. ⚠️조직 환경에서 막힐 수 있음 — 미리 리허설한 결과대로 안내.',
+    'part3-gateB':'<span class="nt-time">~2분 (게이트 B)</span>/schedule 목록 확인 = 통과(Lv3!). <b>솔직 안내 꼭 읽기</b>: "예약 안 돼도 이미 졸업 조건 통과, 보너스예요." 막힌 사람 좌절 안 하게.',
+    'part4-swap':'<span class="nt-time">~3분</span>"골격은 그대로, 입력·양식·출력 3칸만 내 기획서 값으로." 표 보여주며 어디를 바꾸는지 손가락으로. 조교 순회 예고, <b>옆자리 먼저 물어보기</b> 규칙.',
+    'part4-kit':'<span class="nt-time">~2분</span>본인 업무 안 떠오른 사람 구제. 기본 키트 ①② 중 하나만 돌려도 게이트 C 통과. <b>"완벽보다 일단 1개 돌아가게."</b>',
+    'part4-gateC':'<span class="nt-time">~45분 포함 (게이트 C)</span>이게 졸업 작품. 내 데이터로 한 번 나오면 통과. 빠른 사람은 두 번째 자동화/멘토로. 이 모듈이 가장 길다 — 조교 총동원.',
+    'break2':'<span class="nt-time">10분</span>휴식. 게이트 C 못 넘은 사람 이 시간에 기본 키트로 확실히 통과시키기.',
+    'part5-3rules':'<span class="nt-time">~5분</span>분석 데이터 출처 밝히며 신뢰 부여. 3원칙 각각 짧은 예시로. <b>"안 풀리는 건 코드가 아니라 모호한 지시 때문"</b> — 핵심 메시지.',
+    'part5-verify':'<span class="nt-time">~4분</span>민감정보 주의(회사 데이터 규정). 검증 한 줄을 CLAUDE.md에 넣는 시연. "무인이면 틀려도 아무도 모른다 → 첫 2~3회 눈으로 확인."',
+    'part5-selfcheck':'<span class="nt-time">~3분</span>자가진단 3줄. "자동화는 언젠가 깨져요. 당황 말고 1·2·3 순서로." 3번(그냥 물어보기)이 제일 강력.',
+    'part6-demo':'<span class="nt-time">~15분</span>희망자 4~5명 30초 시연 → 박수. 전원 Notion 제출. 제출 복붙 블록 안내. 게이트 D = 수료.',
+    'part6-next3':'<span class="nt-time">~3분</span>3차 예고로 동기부여. "오늘 만든 게 3차 출발점, 잘 보관." 엮기·배포·알림·연동 4가지 맛보기.',
+    'part6-thanks':'<span class="nt-time">~1분</span>마무리. <b>"시키는 사람 → 만드는 사람"</b> 한 문장으로 끝내기. 박수, Q&A로 자연스럽게.',
+  };
+
+  const partOf = (id) => {
+    if(['cover','recap','promise'].includes(id)) return '인트로';
+    if(id.startsWith('part0')) return 'Part 0 · 각성';
+    if(id.startsWith('part1')) return 'Part 1 · 기획 먼저';
+    if(id.startsWith('part2')) return 'Part 2 · 공통 레일';
+    if(id.startsWith('part3')) return 'Part 3 · 무인화';
+    if(id.startsWith('part4')) return 'Part 4 · 내 것으로';
+    if(id.startsWith('part5')) return 'Part 5 · 견고화';
+    if(id.startsWith('part6')) return 'Part 6 · 졸업';
+    if(id.startsWith('break')) return '☕ 쉬는시간';
+    return '';
+  };
+  const titleOf = (s) => {
+    const h1=s.querySelector('h1.slide-title'), h2=s.querySelector('h2.slide-h2');
+    return (h1&&h1.textContent.trim())||(h2&&h2.textContent.trim())||s.id;
+  };
+
+  // overview grid
+  slides.forEach((s,i)=>{
+    const c=document.createElement('div'); c.className='ov-card';
+    c.innerHTML=`<div><div class="ov-num">${String(i+1).padStart(2,'0')} / ${total}</div><div class="ov-title">${titleOf(s).replace(/\s+/g,' ').slice(0,50)}</div></div><div class="ov-part">${partOf(s.id)}</div>`;
+    c.addEventListener('click',()=>{goTo(i);closeOverview();});
+    overviewGrid.appendChild(c);
+  });
+
+  let idx = (()=>{ const i=slides.findIndex(s=>s.id===location.hash.slice(1)); return i>=0?i:0; })();
+
+  function render(){
+    slides.forEach((s,i)=>s.classList.toggle('active',i===idx));
+    counter.textContent=`${idx+1} / ${total}`;
+    progressBar.style.width=((idx+1)/total*100)+'%';
+    arrowPrev.disabled=btnPrev.disabled=btnFirst.disabled=(idx===0);
+    arrowNext.disabled=btnNext.disabled=btnLast.disabled=(idx===total-1);
+    const id=slides[idx].id;
+    if(location.hash.slice(1)!==id) history.replaceState(null,'','#'+id);
+    bcPart.textContent=partOf(id)||' ';
+    bcTitle.textContent=titleOf(slides[idx]).replace(/\s+/g,' ').slice(0,70);
+    notesBody.innerHTML = NOTES[id] || '<span style="opacity:.5;">이 슬라이드는 노트가 없습니다.</span>';
+    const card=slides[idx].querySelector('.card'); if(card)card.scrollTop=0; slides[idx].scrollTop=0;
+  }
+  function toggleNotes(){ notesPanel.classList.toggle('show'); btnNotes.style.background = notesPanel.classList.contains('show')?'#c7d2fe':''; }
+  function goTo(i){ idx=Math.max(0,Math.min(total-1,i)); render(); }
+  const next=()=>goTo(idx+1), prev=()=>goTo(idx-1);
+  const openOv=()=>overview.classList.add('active'), closeOverview=()=>overview.classList.remove('active');
+
+  arrowPrev.onclick=prev; arrowNext.onclick=next;
+  btnPrev.onclick=prev; btnNext.onclick=next;
+  btnFirst.onclick=()=>goTo(0); btnLast.onclick=()=>goTo(total-1);
+  btnOverview.onclick=openOv; overviewClose.onclick=closeOverview;
+  btnNotes.onclick=toggleNotes;
+  btnPrint.onclick=()=>window.print();
+  btnFullscreen.onclick=()=>{ if(!document.fullscreenElement)document.documentElement.requestFullscreen(); else document.exitFullscreen(); };
+
+  window.addEventListener('keydown',(e)=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+    if(overview.classList.contains('active')){ if(e.key==='Escape')closeOverview(); return; }
+    switch(e.key){
+      case 'ArrowRight': case 'PageDown': case ' ': next(); e.preventDefault(); break;
+      case 'ArrowLeft': case 'PageUp': prev(); e.preventDefault(); break;
+      case 'Home': goTo(0); e.preventDefault(); break;
+      case 'End': goTo(total-1); e.preventDefault(); break;
+      case 'o': case 'O': openOv(); e.preventDefault(); break;
+      case 'f': case 'F': if(!document.fullscreenElement)document.documentElement.requestFullscreen(); else document.exitFullscreen(); break;
+      case 's': case 'S': toggleNotes(); e.preventDefault(); break;
+      case 'p': case 'P': window.print(); e.preventDefault(); break;
+    }
+  });
+  window.addEventListener('hashchange',()=>{ const i=slides.findIndex(s=>s.id===location.hash.slice(1)); if(i>=0&&i!==idx)goTo(i); });
+
+  // 코드블록 복사 버튼
+  document.querySelectorAll('.pre').forEach(pre=>{
+    const b=document.createElement('button'); b.className='copybtn'; b.textContent='📋 복사';
+    b.addEventListener('click',async(e)=>{ e.stopPropagation();
+      try{ await navigator.clipboard.writeText(pre.innerText.replace('📋 복사','').trim());
+        b.textContent='✅ 복사됨'; b.classList.add('copied'); setTimeout(()=>{b.textContent='📋 복사';b.classList.remove('copied');},1500);
+      }catch(err){ b.textContent='❌'; }
+    });
+    pre.appendChild(b);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
