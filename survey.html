@@ -64,7 +64,9 @@
   .copybtn.copied{background:#065f46;color:#d1fae5;}
   .oneliner{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:16px 18px;font-size:16px;font-weight:700;color:#065f46;line-height:1.5;}
   .note{background:#fffbeb;border:1px solid #fcd34d;border-radius:14px;padding:14px 16px;font-size:14px;color:#92400e;line-height:1.6;margin-top:14px;}
-  .restart{display:block;margin:22px auto 0;background:#f1f5f9;color:#334155;}
+  .gowb{display:block;text-align:center;text-decoration:none;margin:22px auto 0;max-width:420px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-size:16px;padding:15px 20px;box-shadow:0 16px 30px -16px rgba(79,70,229,.7);}
+  .gowb:hover{transform:translateY(-1px);box-shadow:0 20px 34px -16px rgba(79,70,229,.8);}
+  .restart{display:block;margin:12px auto 0;background:#f1f5f9;color:#334155;}
   .section-label{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin:20px 0 6px;}
   .hidden{display:none;}
 </style>
@@ -275,6 +277,8 @@ function renderResult(){
     </div>
 
     <div class="note">💡 이 결과를 캡처하거나 복사해서 워크북 <b>STEP 2 (공통 레일)</b> 로 가세요. 같은 트랙끼리 모여 앉으면 서로 도와주기 좋아요.</div>
+
+    <a class="btn gowb" id="gowb" href="workbook.html?track=${track}">📖 ${trackName} 워크북 열기 →</a>
 
     <button class="btn restart" id="restart">↻ 다시 진단하기</button>
   `;
